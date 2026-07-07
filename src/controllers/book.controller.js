@@ -1,5 +1,4 @@
 const Book = require("../models/Book");
-
 // @desc    Get all books
 // @route   GET /api/books
 // @access  Public
@@ -19,12 +18,14 @@ const createBook = async (req, res) => {
   try {
     const { title, author, status } = req.body;
 
+    // Instantiating a new document instance from the Book Model
     const newBook = new Book({
       title,
       author,
       status,
     });
 
+    // Clean, direct save operation to MongoDB
     const savedBook = await newBook.save();
     res.status(201).json(savedBook);
   } catch (error) {
@@ -70,7 +71,7 @@ const deleteBook = async (req, res) => {
   }
 };
 
-// Export all functions so book.routes.js can catch and use them
+// Export all the chef functions so the router can use them!
 module.exports = {
   getAllBooks,
   createBook,
