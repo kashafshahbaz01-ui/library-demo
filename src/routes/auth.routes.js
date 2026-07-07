@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User");
+const Member = require("../models/Member"); // <-- Updated to Member
 const jwt = require("jsonwebtoken");
 
 // 1. SIGNUP ENDPOINT: POST /api/auth/signup
@@ -8,23 +8,21 @@ router.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if the user already exists in the database
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: "User already exists with this email" });
+    // Check if the member already exists
+    const memberExists = await Member.findOne({ email });
+    if (memberExists) {
+      return res.status(400).json({ message: "Member already exists with this email" });
     }
 
-    // Create a new user instance (the pre-save hook in User.js will hash the password here!)
-    const newUser = new User({
+    // Create a new member instance
+    const newMember = new Member({
       name,
       email,
       password,
     });
 
-    // Save the user to MongoDB
-    await newUser.save();
-
-    res.status(201).json({ message: "User registered successfully!" });
+    await newMember.save();
+    res.status(201).json({ message: "Member registered successfully!" });
   } catch (error) {
     res.status(500).json({ message: "Server error during registration", error: error.message });
   }
@@ -35,33 +33,32 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find the user by their email
-    const user = await User.findOne({ email });
-    if (!user) {
+    // Find the member by email
+    const member = await Member.findOne({ email });
+    if (!member) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Use the helper method we wrote in User.js to compare the passwords
-    const isMatch = await user.matchPassword(password);
+    // Check password match
+    const isMatch = await member.matchPassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // If password matches, generate a secure JWT Token (Digital Security Badge)
+    // Generate token
     const token = jwt.sign(
-      { id: user._id }, // Embed the user's unique ID inside the token
-      process.env.JWT_SECRET, // Sign it with our secret stamp key
-      { expiresIn: "1d" } // Make the token expire in 1 day for security
+      { id: member._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
     );
 
-    // Send the token back to Postman or the Frontend
     res.status(200).json({
       message: "Login successful!",
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
+      member: {
+        id: member._id,
+        name: member.name,
+        email: member.email,
       },
     });
   } catch (error) {

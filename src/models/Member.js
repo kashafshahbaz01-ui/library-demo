@@ -49,4 +49,5 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
 };
 
 // 4. Compile and export the model to use across our application
-module.exports = mongoose.model("User", userSchema);
+// Change this last line in src/models/Member.js:
+module.exports = mongoose.model("Member", userSchema);
