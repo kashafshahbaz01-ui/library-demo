@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// 1. Define the structural rules for a user profile
-const userSchema = new mongoose.Schema(
+// 1. Define the structural rules for a member profile
+const memberSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -28,26 +28,25 @@ const userSchema = new mongoose.Schema(
 );
 
 // 2. The Pre-Save Hook: Scramble the password automatically before saving to database
-userSchema.pre("save", async function (next) {
+// Cleaned up to use modern async/await execution rules (no 'next' callback needed)
+memberSchema.pre("save", async function () {
   // Only encrypt the password if it was actually modified (or is brand new)
-  if (!this.isModified("password")) return next();
+  if (!this.isModified("password")) return;
 
   try {
     // Generate a secure cryptographic salt round sequence
     const salt = await bcrypt.genSalt(10);
     // Overwrite the plain-text password input with the new hashed string
     this.password = await bcrypt.hash(this.password, salt);
-    next();
   } catch (error) {
-    next(error);
+    throw error; // Passes any hashing error straight to the Mongoose catch collector
   }
 });
 
 // 3. Helper Method: Create a function to verify incoming passwords during login later
-userSchema.methods.matchPassword = async function (enteredPassword) {
+memberSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// 4. Compile and export the model to use across our application
-// Change this last line in src/models/Member.js:
-module.exports = mongoose.model("Member", userSchema);
+// 4. Compile and export the model using the correct 'Member' identity identity
+module.exports = mongoose.model("Member", memberSchema);
