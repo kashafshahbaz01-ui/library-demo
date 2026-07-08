@@ -1,53 +1,60 @@
 const express = require('express');
 const router = express.Router();
+const { protect } = require('../middleware/auth.middleware');
 
-// Import all controller functions
+
+
+
+
+
 const { 
-  createBook, 
-  getAllBooks, 
-  getBookById, 
-  updateBook, 
+  createBook,
+  getAllBooks,
+  getBookById,
+  updateBook,
   deleteBook,
   borrowBook,
-  returnBook
+  returnBook,
+  getLibraryStats,
+  getMyBorrowedBooks,
 } = require('../controllers/book.controller');
 
-// Import authentication & authorization middlewares
-const { protect } = require('../middleware/auth.middleware');
-const { adminOnly } = require('../middleware/admin.middleware');
+
 
 // ==========================================
-// 1. PUBLIC ROUTES
+// PUBLIC ROUTES
 // ==========================================
 
-// Get all books (e.g., GET /api/books)
+
 router.get('/', getAllBooks);
 
-// Get single book by ID (e.g., GET /api/books/6a4cee...)
-// Note: This must stay below broad actions but above sub-resource parameters if conflicts occur
+
 router.get('/:id', getBookById);
 
 // ==========================================
-// 2. PROTECTED ACTIONS (Must be logged in)
+// PROTECTED ROUTES (Requires Logged-In Token)
 // ==========================================
-
-// Create a book
-router.post('/', protect, createBook);
-
-// Update a book's basic details
+// ==========================================
+// PROTECTED ROUTES (Requires Logged-In Token)
+// ==========================================
+router.get('/member/profile/borrowed', protect, getMyBorrowedBooks); // <-- ADD THIS LINE
+router.post('/:id/borrow', protect, borrowBook);
+router.post('/:id/return', protect, returnBook);
 router.put('/:id', protect, updateBook);
 
-// Borrow a book (e.g., POST /api/books/6a4cee.../borrow)
+
 router.post('/:id/borrow', protect, borrowBook);
 
-// Return a book (e.g., POST /api/books/6a4cee.../return)
+
 router.post('/:id/return', protect, returnBook);
+router.put('/:id', protect, updateBook);
 
 // ==========================================
-// 3. ADMIN ONLY ACTIONS (Must be logged in AND an admin)
+// ADMIN EXCLUSIVE ENDPOINTS 
 // ==========================================
-
-// Delete a book
-router.delete('/:id', protect, adminOnly, deleteBook);
+// Aggregation Dashboard metric calculation path
+router.get('/dashboard/analytics', protect, getLibraryStats);
+router.post('/', protect, createBook);
+router.delete('/:id', protect, deleteBook);
 
 module.exports = router;

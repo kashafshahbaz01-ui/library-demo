@@ -1,42 +1,45 @@
-const express = require("express");
-require("dotenv").config();
-const connectDB = require("./config/db");
+const express = require('express');
+const mongoose = require('mongoose');
+require('dotenv').config();
 
-// 1. IMPORT ROUTES
-// Import your existing book operations menu
-const bookRoutes = require("./routes/book.routes");
-// Import your brand-new user security gate system
-const authRoutes = require("./routes/auth.routes");
+// FIX: Removed the extra 'src' from the path since app.js is already inside src/
+const authRoutes = require('./routes/auth.routes');
+const bookRoutes = require('./routes/book.routes');
 
-// 2. INITIALIZE EXPRESS APP
 const app = express();
 
-// 3. CONNECT TO DATABASE
-// Establishes the secure telephone line to your local MongoDB server
-connectDB();
-
-// 4. GLOBAL MIDDLEWARE
-// Crucial gatekeeper: translates incoming raw JSON text payloads 
-// into clean JavaScript objects so your routes can read 'req.body'
+// Body parsing middleware (Crucial for reading JSON raw bodies from Postman)
 app.use(express.json());
 
-// 5. MOUNT API ROUTE MODULES
-// Mounts your book management paths at: http://localhost:5000/api/books
-app.use("/api/books", bookRoutes);
+// ==========================================
+// ROUTE PREFIX DEFINITIONS
+// ==========================================
+// Maps authentication endpoints to http://localhost:5000/api/auth/...
+app.use('/api/auth', authRoutes);
 
-// Mounts your authentication paths at: http://localhost:5000/api/auth/signup and /login
-app.use("/api/auth", authRoutes);
+// Maps book management endpoints to http://localhost:5000/api/books/...
+app.use('/api/books', bookRoutes);
 
-// 6. BASE TEST ENDPOINT
-// A quick sanity check route to ensure your server receptionist is breathing
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Library Demo API is running smoothly!" });
+// Global simple health-check fallback path
+app.get('/', (req, res) => {
+  res.status(200).json({ message: "Library system API is live and operational." });
 });
 
-// 7. START NETWORK LISTENING PORT
+// ==========================================
+// DATABASE CONNECTION & SERVER STARTUP
+// ==========================================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`=========================================`);
-  console.log(`🚀 Server running on network port ${PORT}`);
-  console.log(`=========================================`);
-});
+const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/library-demo";
+
+mongoose.connect(MONGO_URI)
+  .then(() => {
+    console.log("🚀 Connected to MongoDB Database successfully.");
+    app.listen(PORT, () => {
+      console.log(`📡 Server running smoothly on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ Database connection error occurred: ", err.message);
+  });
+
+module.exports = app;

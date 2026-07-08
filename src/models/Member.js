@@ -15,33 +15,32 @@ const memberSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  // 👇 Step 1: Added the role field according to the brief requirements
   role: {
     type: String,
-    enum: ['member', 'admin'], // Strict validation: only allow these two values 
-    default: 'member'          // Automatically signs up users as standard members 
+    enum: ['member', 'admin'],
+    default: 'member'
   }
 }, { timestamps: true });
 
-// Pre-save hook: Automatically hashes the password before saving a member to MongoDB [cite: 7, 18]
-memberSchema.pre('save', async function (next) {
-  // Only hash the password if it has been modified or is new
+// ==========================================================
+// PRE-SAVE HOOK: Automatically hashes passwords before saving
+// ==========================================================
+memberSchema.pre('save', async function () {
+  // Only hash the password if it has been modified or is brand new
   if (!this.isModified('password')) {
-    return next();
+    return;
   }
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  // Generate salt and hash the password cleanly using async/await (No next argument needed)
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Instance method: Compares submitted text password with the database hash during login [cite: 7]
+// ==========================================================
+// CUSTOM METHOD: Compares entered plain-text with database hash
+// ==========================================================
 memberSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model("Member", memberSchema);
+module.exports = mongoose.model('Member', memberSchema);

@@ -1,26 +1,25 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
-const BookSchema = new mongoose.Schema(
-  {
-    title: {
-      type: String,
-      required: [true, "Please add a book title"],
-      trim: true,
-    },
-    author: {
-      type: String,
-      required: [true, "Please add an author"],
-      trim: true,
-    },
-    status: {
-      type: String,
-      enum: ["available", "borrowed"],
-      default: "available",
-    },
+const bookSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true
   },
-  {
-    timestamps: true, // Automatically creates createdAt and updatedAt fields
+  author: {
+    type: String,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['available', 'borrowed'],
+    default: 'available'
+  },
+  // This field maps a specific book record back to the profile record of the member holding it
+  borrowedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Member',
+    default: null
   }
-);
+}, { timestamps: true });
 
-module.exports = mongoose.model("Book", BookSchema);
+module.exports = mongoose.model('Book', bookSchema);

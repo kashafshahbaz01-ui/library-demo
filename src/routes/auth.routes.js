@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const Member = require("../models/Member"); // <-- Updated to Member
+const Member = require("../models/Member");
 const jwt = require("jsonwebtoken");
 
-// 1. SIGNUP ENDPOINT: POST /api/auth/signup
-router.post("/signup", async (req, res) => {
+// 1. REGISTRATION ENDPOINT: POST /api/auth/register
+router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -45,9 +45,9 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    // Generate token
+    // Generate token (carrying identity and role structures)
     const token = jwt.sign(
-      { id: member._id },
+      { id: member._id, role: member.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -59,6 +59,7 @@ router.post("/login", async (req, res) => {
         id: member._id,
         name: member.name,
         email: member.email,
+        role: member.role || "member"
       },
     });
   } catch (error) {
