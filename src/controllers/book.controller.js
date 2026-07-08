@@ -1,80 +1,129 @@
-const Book = require("../models/Book");
-// @desc    Get all books
-// @route   GET /api/books
-// @access  Public
-const getAllBooks = async (req, res) => {
-  try {
-    const books = await Book.find();
-    res.status(200).json(books);
-  } catch (error) {
-    res.status(500).json({ message: "Server error, could not retrieve books", error: error.message });
-  }
-};
+const Book = require('../models/Book');
 
-// @desc    Create a new book
-// @route   POST /api/books
-// @access  Protected
+// 1. Create a brand new book
 const createBook = async (req, res) => {
   try {
     const { title, author, status } = req.body;
-
-    // Instantiating a new document instance from the Book Model
+    
     const newBook = new Book({
       title,
       author,
-      status,
+      status
     });
 
-    // Clean, direct save operation to MongoDB
     const savedBook = await newBook.save();
     res.status(201).json(savedBook);
   } catch (error) {
-    res.status(400).json({ message: "Data validation failed, could not save book", error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// @desc    Update a book
-// @route   PUT /api/books/:id
-// @access  Protected
+// 2. Read All Books (Public)
+const getAllBooks = async (req, res) => {
+  try {
+    const books = await Book.find({});
+    res.status(200).json(books);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// 3. Read Single Book by ID (Public)
+const getBookById = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+    
+    res.status(200).json(book);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// 4. Update an existing book's details
 const updateBook = async (req, res) => {
   try {
     const updatedBook = await Book.findByIdAndUpdate(
-      req.params.id, 
-      req.body, 
+      req.params.id,
+      req.body,
       { new: true, runValidators: true }
     );
 
     if (!updatedBook) {
-      return res.status(404).json({ message: "Book not found with that ID" });
+      return res.status(404).json({ message: "Book not found" });
     }
 
     res.status(200).json(updatedBook);
   } catch (error) {
-    res.status(400).json({ message: "Update failed", error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// @desc    Delete a book
-// @route   DELETE /api/books/:id
-// @access  Protected
+// 5. Delete a book permanently (Protected - Admin Only)
 const deleteBook = async (req, res) => {
   try {
     const deletedBook = await Book.findByIdAndDelete(req.params.id);
 
     if (!deletedBook) {
-      return res.status(404).json({ message: "Book not found with that ID" });
+      return res.status(404).json({ message: "Book not found" });
     }
 
-    res.status(200).json({ message: "Book successfully removed from library catalog" });
+    res.status(200).json({ message: "Book successfully deleted" });
   } catch (error) {
-    res.status(500).json({ message: "Server error, could not delete book", error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
-// Export all the chef functions so the router can use them!
+// 6. Borrow a book (Protected)
+const borrowBook = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+    
+    if (book.status === 'borrowed') {
+      return res.status(400).json({ message: "Book is already borrowed" });
+    }
+    
+    book.status = 'borrowed';
+    await book.save();
+    
+    res.status(200).json(book);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// 7. Return a book (Protected)
+const returnBook = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    
+    if (!book) {
+      return res.status(404).json({ message: "Book not found" });
+    }
+    
+    book.status = 'available';
+    await book.save();
+    
+    res.status(200).json(book);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Exporting all functions perfectly to be read by book.routes.js
 module.exports = {
-  getAllBooks,
   createBook,
+  getAllBooks,
+  getBookById,
   updateBook,
   deleteBook,
+  borrowBook,
+  returnBook
 };

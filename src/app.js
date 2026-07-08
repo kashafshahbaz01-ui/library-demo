@@ -22,7 +22,7 @@ app.use(express.json());
 
 // 5. MOUNT API ROUTE MODULES
 // Mounts your book management paths at: http://localhost:5000/api/books
-app.use("/api", bookRoutes);
+app.use("/api/books", bookRoutes);
 
 // Mounts your authentication paths at: http://localhost:5000/api/auth/signup and /login
 app.use("/api/auth", authRoutes);

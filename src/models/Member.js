@@ -1,52 +1,47 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-// 1. Define the structural rules for a member profile
-const memberSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: [true, "Please provide a name"],
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: [true, "Please provide an email"],
-      unique: true, // Prevents two accounts from sharing the same email address
-      lowercase: true,
-      trim: true,
-    },
-    password: {
-      type: String,
-      required: [true, "Please provide a password"],
-      minlength: [6, "Password must be at least 6 characters long"],
-    },
+const memberSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true
   },
-  {
-    timestamps: true, // Automatically manages createdAt and updatedAt dates
+  email: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  password: {
+    type: String,
+    required: true
+  },
+  // 👇 Step 1: Added the role field according to the brief requirements
+  role: {
+    type: String,
+    enum: ['member', 'admin'], // Strict validation: only allow these two values 
+    default: 'member'          // Automatically signs up users as standard members 
   }
-);
+}, { timestamps: true });
 
-// 2. The Pre-Save Hook: Scramble the password automatically before saving to database
-// Cleaned up to use modern async/await execution rules (no 'next' callback needed)
-memberSchema.pre("save", async function () {
-  // Only encrypt the password if it was actually modified (or is brand new)
-  if (!this.isModified("password")) return;
+// Pre-save hook: Automatically hashes the password before saving a member to MongoDB [cite: 7, 18]
+memberSchema.pre('save', async function (next) {
+  // Only hash the password if it has been modified or is new
+  if (!this.isModified('password')) {
+    return next();
+  }
 
   try {
-    // Generate a secure cryptographic salt round sequence
     const salt = await bcrypt.genSalt(10);
-    // Overwrite the plain-text password input with the new hashed string
     this.password = await bcrypt.hash(this.password, salt);
+    next();
   } catch (error) {
-    throw error; // Passes any hashing error straight to the Mongoose catch collector
+    next(error);
   }
 });
 
-// 3. Helper Method: Create a function to verify incoming passwords during login later
+// Instance method: Compares submitted text password with the database hash during login [cite: 7]
 memberSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// 4. Compile and export the model using the correct 'Member' identity identity
 module.exports = mongoose.model("Member", memberSchema);

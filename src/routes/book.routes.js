@@ -1,22 +1,53 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
-// 1. IMPORT CONTROLLERS (The Chefs)
-const bookController = require("../controllers/book.controller");
+// Import all controller functions
+const { 
+  createBook, 
+  getAllBooks, 
+  getBookById, 
+  updateBook, 
+  deleteBook,
+  borrowBook,
+  returnBook
+} = require('../controllers/book.controller');
 
-// 2. IMPORT MIDDLEWARE (The Gatekeeper)
-const { protect } = require("../middleware/auth.middleware");
+// Import authentication & authorization middlewares
+const { protect } = require('../middleware/auth.middleware');
+const { adminOnly } = require('../middleware/admin.middleware');
 
 // ==========================================
-// ROUTE DEFINITIONS
+// 1. PUBLIC ROUTES
 // ==========================================
 
-// Public Route (Anyone can browse books)
-router.get("/books", bookController.getAllBooks);
+// Get all books (e.g., GET /api/books)
+router.get('/', getAllBooks);
 
-// Protected Routes (Requires a valid JWT badge)
-router.post("/books", protect, bookController.createBook);
-router.put("/books/:id", protect, bookController.updateBook);
-router.delete("/books/:id", protect, bookController.deleteBook);
+// Get single book by ID (e.g., GET /api/books/6a4cee...)
+// Note: This must stay below broad actions but above sub-resource parameters if conflicts occur
+router.get('/:id', getBookById);
+
+// ==========================================
+// 2. PROTECTED ACTIONS (Must be logged in)
+// ==========================================
+
+// Create a book
+router.post('/', protect, createBook);
+
+// Update a book's basic details
+router.put('/:id', protect, updateBook);
+
+// Borrow a book (e.g., POST /api/books/6a4cee.../borrow)
+router.post('/:id/borrow', protect, borrowBook);
+
+// Return a book (e.g., POST /api/books/6a4cee.../return)
+router.post('/:id/return', protect, returnBook);
+
+// ==========================================
+// 3. ADMIN ONLY ACTIONS (Must be logged in AND an admin)
+// ==========================================
+
+// Delete a book
+router.delete('/:id', protect, adminOnly, deleteBook);
 
 module.exports = router;
