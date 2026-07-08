@@ -12,7 +12,7 @@ This project is a RESTful backend API designed to manage a digital library datab
     ```bash
     PORT=5000
     MONGO_URI=mongodb://127.0.0.1:27017/library-demo
-    JWT_SECRET=your_secret_key_here
+    JWT_SECRET=mySuperSecretLibraryKey12345
 
 3. **Run Developmental Server**
     ```bash 
