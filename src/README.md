@@ -1,20 +1,20 @@
 ```markdown
-**Library Book Lending API**
+### Library Book Lending API
 
 This project is a full-featured RESTful backend API built with Node.js, Express, and MongoDB. It manages a digital library database, featuring user authentication, automatic password hashing, dynamic book checking status, query pagination, and advanced aggregate analytics dashboard metrics.
 
 
 
-**🚀 How to Run It Locally**
+### 🚀 How to Run It Locally
 
- 1. Install Dependencies
+### 1. Install Dependencies
 Run the following command in your terminal to install the necessary node modules:
 ```bash
 npm install
 
 ```
 
-2. Configure Environment Variables
+### 2. Configure Environment Variables
 
 Create a `.env` file in the root directory of the project and add the following keys:
 
